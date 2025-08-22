@@ -1,38 +1,51 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { parse } from 'cookie';
+import { checkServerSession } from './lib/api/serverApi';
+
+const privateRoutes = ['/profile'];
+const publicRoutes = ['/sign-in', '/sign-up'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const accessToken = request.cookies.get('accessToken')?.value;
-  const refreshToken = request.cookies.get('refreshToken')?.value;
 
-  const isPublicRoute =
-    pathname.startsWith('/sign-in') ||
-    pathname.startsWith('/sign-up') ||
-    pathname === '/';
+  const cookieHeader = request.headers.get('cookie') || '';
+  const cookiesParsed = parse(cookieHeader);
+  const accessToken = cookiesParsed['accessToken'];
+  const refreshToken = cookiesParsed['refreshToken'];
 
-  const isPrivateRoute =
-    pathname.startsWith('/profile') || pathname.startsWith('/notes');
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+  const isPrivateRoute = privateRoutes.some(route => pathname.startsWith(route));
 
-  // Якщо користувач неавторизований і намагається отримати доступ до приватної сторінки,
-  // перенаправляємо його на сторінку входу.
-  if (!accessToken && isPrivateRoute) {
+  if (!accessToken) {
     if (refreshToken) {
-      const url = new URL('/api/auth/refresh', request.url);
-      url.searchParams.set('next', pathname);
-      return NextResponse.redirect(url);
+      const sessionResponse = await checkServerSession();
+      const setCookieHeader = sessionResponse.headers['set-cookie'] as string | string[] | undefined;
+
+      if (setCookieHeader) {
+        const cookieArray = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
+
+        if (isPublicRoute) {
+          const response = NextResponse.redirect(new URL('/', request.url));
+          cookieArray.forEach(c => response.headers.append('set-cookie', c));
+          return response;
+        }
+
+        if (isPrivateRoute) {
+          const response = NextResponse.next();
+          cookieArray.forEach(c => response.headers.append('set-cookie', c));
+          return response;
+        }
+      }
     }
-    return NextResponse.redirect(new URL('/sign-in', request.url));
+
+    if (isPublicRoute) return NextResponse.next();
+    if (isPrivateRoute) return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 
-  // Якщо користувач авторизований і намагається отримати доступ до публічної сторінки,
-  // перенаправляємо його на сторінку профілю.
-  if (accessToken && isPublicRoute && pathname !== '/') {
-    return NextResponse.redirect(new URL('/profile', request.url));
-  }
-
-  return NextResponse.next();
+  if (isPublicRoute) return NextResponse.redirect(new URL('/', request.url));
+  if (isPrivateRoute) return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/profile/:path*', '/sign-in', '/sign-up'],
 };
