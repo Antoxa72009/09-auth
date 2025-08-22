@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: NotesPageProps) {
 }
 
 export default async function NotesPage({ params }: NotesPageProps) {
-  const { slug } = await params; // <-- await тут
+  const { slug } = await params;
   if (!slug || slug.length !== 1) notFound();
 
   const tag = slug[0];

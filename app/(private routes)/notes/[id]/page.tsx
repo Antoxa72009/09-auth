@@ -15,7 +15,10 @@ export async function generateMetadata({
   const { id } = params;
   if (!id) notFound();
 
-  const note = await fetchNoteById(id);
+  const cookieStore = cookies();
+  const cookieHeader = cookieStore.toString();
+
+  const note = await fetchNoteById(id, cookieHeader);
   if (!note) notFound();
 
   const url = `https://yourdomain.com/notes/${id}`;

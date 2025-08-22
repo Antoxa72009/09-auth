@@ -1,24 +1,30 @@
 'use client';
 
 import { useEffect, useState, FormEvent } from 'react';
-import css from './EditProfile.module.css';
+import css from './EditProfilePage.module.css';
 import Image from 'next/image';
 import { fetchUserMe, updateUserMe } from '@/lib/api/clientApi';
 import { useRouter } from 'next/navigation';
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState<string>('');
   const [email, setEmail] = useState<string>('');
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatar, setAvatar] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const user = await fetchUserMe();
-      setUsername(user.username);
-      setEmail(user.email);
-      setAvatarUrl(user.avatarUrl);
+      try {
+        const user = await fetchUserMe();
+        if (user) {
+          setUsername(user.username ?? '');
+          setEmail(user.email ?? '');
+          setAvatar(user.avatar ?? null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user:', err);
+      }
     })();
   }, []);
 
@@ -39,7 +45,7 @@ export default function EditProfilePage() {
         <h1 className={css.formTitle}>Edit Profile</h1>
 
         <Image
-          src={avatarUrl || '/avatar-placeholder.png'}
+          src={avatar || '/avatar-placeholder.png'}
           alt="User Avatar"
           width={120}
           height={120}
@@ -64,7 +70,11 @@ export default function EditProfilePage() {
             <button type="submit" className={css.saveButton} disabled={saving}>
               {saving ? 'Saving...' : 'Save'}
             </button>
-            <button type="button" className={css.cancelButton} onClick={() => router.push('/profile')}>
+            <button
+              type="button"
+              className={css.cancelButton}
+              onClick={() => router.push('/profile')}
+            >
               Cancel
             </button>
           </div>

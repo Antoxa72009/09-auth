@@ -1,44 +1,78 @@
-'use client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createNote } from '@/lib/api/clientApi';
-import css from './NoteForm.module.css';
-import { useRouter } from 'next/navigation';
-import type { Note, NoteTag } from '@/types/note';
-import { FormEvent, useState } from 'react';
+"use client";
 
-const emptyNote: Partial<Note> = { title: '', content: '', tag: 'Work' as NoteTag };
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import styles from "./NoteForm.module.css";
 
-export default function NoteForm() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const [note, setNote] = useState<Partial<Note>>(emptyNote);
-
-  const mutation = useMutation({
-    mutationFn: (data: Partial<Note>) => createNote(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      setNote(emptyNote);
-      router.push('/notes/filter/all');
-    },
-  });
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!note.title || !note.content || !note.tag) return alert('Fill all fields');
-    mutation.mutate(note);
+interface NoteFormProps {
+  initialValues?: {
+    title: string;
+    content: string;
   };
+  onSubmit: (values: { title: string; content: string }) => void;
+  submitText?: string;
+}
 
+const validationSchema = Yup.object({
+  title: Yup.string()
+    .required("Title is required")
+    .max(100, "Title must be at most 100 characters"),
+  content: Yup.string()
+    .required("Content is required")
+    .max(1000, "Content must be at most 1000 characters"),
+});
+
+export default function NoteForm({
+  initialValues = { title: "", content: "" },
+  onSubmit,
+  submitText = "Save",
+}: NoteFormProps) {
   return (
-    <form className={css.form} onSubmit={handleSubmit}>
-      <input name="title" value={note.title} onChange={(e) => setNote({ ...note, title: e.target.value })} />
-      <textarea name="content" value={note.content} onChange={(e) => setNote({ ...note, content: e.target.value })} />
-      <select name="tag" value={note.tag} onChange={(e) => setNote({ ...note, tag: e.target.value as NoteTag })}>
-        <option>Work</option>
-        <option>Personal</option>
-      </select>
-      <button type="submit" disabled={mutation.isPending}>
-        {mutation.isPending ? 'Saving...' : 'Save'}
-      </button>
-    </form>
+    <Formik
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={(values, { resetForm }) => {
+        onSubmit(values);
+        resetForm();
+      }}
+    >
+      {({ isSubmitting }) => (
+        <Form className={styles.form}>
+          <div className={styles.field}>
+            <label htmlFor="title">Title</label>
+            <Field id="title" name="title" placeholder="Enter title" />
+            <ErrorMessage
+              name="title"
+              component="div"
+              className={styles.error}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="content">Content</label>
+            <Field
+              as="textarea"
+              id="content"
+              name="content"
+              placeholder="Enter content"
+              rows={5}
+            />
+            <ErrorMessage
+              name="content"
+              component="div"
+              className={styles.error}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className={styles.button}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Saving..." : submitText}
+          </button>
+        </Form>
+      )}
+    </Formik>
   );
 }

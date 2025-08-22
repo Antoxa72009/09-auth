@@ -5,7 +5,7 @@ import { useState } from 'react';
 import NoteList from '@/components/NoteList/NoteList';
 
 interface NotesClientProps {
-  dehydratedState?: unknown; // для типізації, якщо буде Hydration
+  dehydratedState?: unknown;
   initialTag: string;
 }
 
