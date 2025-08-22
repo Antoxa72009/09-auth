@@ -13,7 +13,7 @@ export default async function NotePreviewPage({ params }: NotePreviewPageProps) 
   const queryClient = new QueryClient();
 
   const cookieStore = await cookies();
-  const token = cookieStore.get?.("token")?.value ?? null;
+  const token = cookieStore.get("token")?.value ?? null;
 
   try {
     await queryClient.prefetchQuery({
