@@ -1,70 +1,45 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useAuthStore, User } from '@/lib/store/authStore';
-import { usePathname, useRouter } from 'next/navigation';
+import { ReactNode, useEffect, useState } from 'react';
+import { useAuthStore } from '@/lib/store/authStore';
+import { useRouter, usePathname } from 'next/navigation';
+import { fetchSession } from '@/lib/api/clientApi';
 
-type AuthContextType = {
-  isAuthenticated: boolean;
-  user: User | null;
-  loading: boolean;
-};
-
-const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: false,
-  user: null,
-  loading: true,
-});
-
-export function useAuth() {
-  return useContext(AuthContext);
+interface AuthProviderProps {
+  children: ReactNode;
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user, setUser, clearAuth } = useAuthStore();
+export default function AuthProvider({ children }: AuthProviderProps) {
+  const { user, setUser, clearIsAuthenticated } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const res = await fetch('/api/auth/session');
-        if (res.ok) {
-          const userData: User = await res.json();
-          setUser(userData);
-        } else {
-          clearAuth();
-        }
-      } catch (error) {
-        console.error('Session check failed:', error);
-        clearAuth();
-      } finally {
-        setLoading(false);
-      }
+    const check = async () => {
+      setLoading(true);
+      const session = await fetchSession();
+      if (session) setUser(session);
+      else clearIsAuthenticated();
+      setLoading(false);
     };
-    checkSession();
-  }, [setUser, clearAuth]);
+    check();
+  }, [setUser, clearIsAuthenticated]);
 
   useEffect(() => {
     if (!loading) {
       const privateRoutes = ['/profile', '/notes'];
       const authRoutes = ['/sign-in', '/sign-up'];
-      
-      const isPrivateRoute = privateRoutes.some(route => pathname.startsWith(route));
-      const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
-      
-      if (!user && isPrivateRoute) {
-        router.push('/sign-in');
-      } else if (user && isAuthRoute) {
-        router.push('/profile');
-      }
-    }
-  }, [user, pathname, router, loading]);
 
-  return (
-    <AuthContext.Provider value={{ isAuthenticated: !!user, user, loading }}>
-      {loading ? <p>Loading...</p> : children}
-    </AuthContext.Provider>
-  );
+      const isPrivate = privateRoutes.some((r) => pathname.startsWith(r));
+      const isAuth = authRoutes.some((r) => pathname.startsWith(r));
+
+      if (!user && isPrivate) router.push('/sign-in');
+      else if (user && isAuth) router.push('/profile');
+    }
+  }, [user, pathname, loading, router]);
+
+  if (loading) return <p>Loading...</p>;
+
+  return <>{children}</>;
 }

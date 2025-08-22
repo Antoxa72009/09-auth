@@ -1,58 +1,52 @@
 'use client';
 
 import { useEffect, useState, FormEvent } from 'react';
+import css from './EditProfile.module.css';
 import Image from 'next/image';
-import css from './EditProfilePage.module.css';
+import { fetchUserMe, updateUserMe } from '@/lib/api/clientApi';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/store/authStore';
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const { user, setUser } = useAuthStore();
-  const [username, setUsername] = useState(user?.username || '');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState<string>('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setUsername(user.username || '');
-    }
-  }, [user]);
+    (async () => {
+      const user = await fetchUserMe();
+      setUsername(user.username);
+      setEmail(user.email);
+      setAvatarUrl(user.avatarUrl);
+    })();
+  }, []);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-
+    setSaving(true);
     try {
-      const res = await fetch('/api/users/me', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username }),
-      });
-      if (res.ok) {
-        const updatedUser = await res.json();
-        setUser(updatedUser);
-        router.push('/profile');
-      }
-    } catch {
-      console.error('Failed to update profile');
+      await updateUserMe({ username });
+      router.push('/profile');
+    } finally {
+      setSaving(false);
     }
   };
-
-  if (!user) return <p>Loading...</p>;
 
   return (
     <main className={css.mainContent}>
       <div className={css.profileCard}>
         <h1 className={css.formTitle}>Edit Profile</h1>
+
         <Image
-          src={user.avatar || '/default-avatar.png'}
+          src={avatarUrl || '/avatar-placeholder.png'}
           alt="User Avatar"
           width={120}
           height={120}
           className={css.avatar}
         />
-        <form className={css.profileInfo} onSubmit={handleSubmit}>
+
+        <form className={css.profileInfo} onSubmit={onSubmit}>
           <div className={css.usernameWrapper}>
             <label htmlFor="username">Username:</label>
             <input
@@ -63,10 +57,12 @@ export default function EditProfilePage() {
               onChange={(e) => setUsername(e.target.value)}
             />
           </div>
-          <p>Email: {user.email}</p>
+
+          <p>Email: {email}</p>
+
           <div className={css.actions}>
-            <button type="submit" className={css.saveButton}>
-              Save
+            <button type="submit" className={css.saveButton} disabled={saving}>
+              {saving ? 'Saving...' : 'Save'}
             </button>
             <button type="button" className={css.cancelButton} onClick={() => router.push('/profile')}>
               Cancel

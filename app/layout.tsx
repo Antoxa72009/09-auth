@@ -1,21 +1,36 @@
-import './globals.css';
-import { ReactNode } from 'react';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import TanStackProvider from '@/components/TanStackProvider/TanStackProvider';
+import AuthProvider from '@/components/AuthProvider/AuthProvider';
 import Header from '@/components/Header/Header';
-import { AuthProvider } from '@/components/AuthProvider/AuthProvider';
+import Footer from '@/components/Footer/Footer';
+import './globals.css';
+import css from './Layout.module.css';
 
-export const metadata = {
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
   title: 'NoteHub',
-  description: 'Your personal note app',
+  description: 'A place to store all your notes.',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
-      <body>
-        <AuthProvider>
-          <Header />
-          <main>{children}</main>
-        </AuthProvider>
+      <body className={inter.className}>
+        <TanStackProvider>
+          <AuthProvider>
+            <div className={css.app}>
+              <Header />
+              <main>{children}</main>
+              <Footer />
+            </div>
+          </AuthProvider>
+        </TanStackProvider>
       </body>
     </html>
   );

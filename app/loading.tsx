@@ -1,5 +1,7 @@
-'use client';
+import React from 'react';
 
-export default function Loading() {
+const LoadingPage = () => {
   return <p>Loading...</p>;
-}
+};
+
+export default LoadingPage;

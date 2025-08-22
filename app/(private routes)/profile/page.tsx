@@ -1,51 +1,22 @@
-'use client';
+import { fetchUserMe } from '@/lib/api/serverApi';
+import { cookies } from 'next/headers';
 
-import Image from 'next/image';
-import css from './ProfilePage.module.css';
-import Link from 'next/link';
-import { useAuth } from '@/components/AuthProvider/AuthProvider';
+export default async function ProfilePage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token')?.value ?? null;
 
-export default function ProfilePage() {
-  const { user, loading } = useAuth();
+  if (!token) return <div>Please log in to view profile</div>;
 
-  // Якщо дані завантажуються, показуємо лоадер
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
-  // Якщо користувач не авторизований, не показуємо нічого (редірект відбудеться в AuthProvider)
-  if (!user) {
-    return null;
-  }
-
-  // Якщо дані користувача є, рендеримо сторінку
-  return (
-    <main className={css.mainContent}>
-      <div className={css.profileCard}>
-        <div className={css.header}>
-          <h1 className={css.formTitle}>Profile Page</h1>
-          <Link href="/profile/edit" className={css.editProfileButton}>
-            Edit Profile
-          </Link>
-        </div>
-        <div className={css.avatarWrapper}>
-          <Image
-            src={user.avatar || '/default-avatar.png'}
-            alt="User Avatar"
-            width={120}
-            height={120}
-            className={css.avatar}
-          />
-        </div>
-        <div className={css.profileInfo}>
-          <p>
-            Username: {user.username || user.email}
-          </p>
-          <p>
-            Email: {user.email}
-          </p>
-        </div>
+  try {
+    const user = await fetchUserMe(token);
+    return (
+      <div>
+        <h1>Profile</h1>
+        <p>Name: {user.name}</p>
+        <p>Email: {user.email}</p>
       </div>
-    </main>
-  );
+    );
+  } catch {
+    return <div>Failed to load profile.</div>;
+  }
 }

@@ -4,18 +4,14 @@ import { cookies } from 'next/headers';
 import { logErrorResponse } from '../../_utils/utils';
 import { isAxiosError } from 'axios';
 
-type Props = {
-  params: Promise<{ id: string }>;
-};
+type Props = { params: { id: string } };
 
-export async function GET(request: Request, { params }: Props) {
+export async function GET(_request: Request, { params }: Props) {
   try {
     const cookieStore = await cookies();
-    const { id } = await params;
+    const { id } = params;
     const res = await api(`/notes/${id}`, {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      headers: { Cookie: cookieStore.toString() },
     });
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
@@ -31,15 +27,12 @@ export async function GET(request: Request, { params }: Props) {
   }
 }
 
-export async function DELETE(request: Request, { params }: Props) {
+export async function DELETE(_request: Request, { params }: Props) {
   try {
     const cookieStore = await cookies();
-    const { id } = await params;
-
+    const { id } = params;
     const res = await api.delete(`/notes/${id}`, {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      headers: { Cookie: cookieStore.toString() },
     });
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
@@ -58,13 +51,10 @@ export async function DELETE(request: Request, { params }: Props) {
 export async function PATCH(request: Request, { params }: Props) {
   try {
     const cookieStore = await cookies();
-    const { id } = await params;
+    const { id } = params;
     const body = await request.json();
-
     const res = await api.patch(`/notes/${id}`, body, {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      headers: { Cookie: cookieStore.toString() },
     });
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
