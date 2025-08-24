@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-export const api = axios.create({
-  baseURL: 'https://notehub-api.goit.study',
-  withCredentials: true, 
+export const nextServer = axios.create({
+  baseURL: 'http://localhost:3000/api',
+  headers: { 'Content-Type': 'aplication/json' },
+  withCredentials: true,
 });

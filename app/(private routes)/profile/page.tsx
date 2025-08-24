@@ -1,22 +1,26 @@
-import { fetchUserMe } from '@/lib/api/serverApi';
-import { cookies } from 'next/headers';
+import Link from "next/link";
+import css from "./ProfilePage.module.css"
+import { getServerMe } from "@/lib/api/serverApi";
 
 export default async function ProfilePage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value ?? null;
-
-  if (!token) return <div>Please log in to view profile</div>;
-
   try {
-    const user = await fetchUserMe(token);
+    const user = await getServerMe();
+
     return (
-      <div>
-        <h1>Profile</h1>
-        <p>Name: {user.name}</p>
-        <p>Email: {user.email}</p>
-      </div>
+      <section>
+        <div>
+          <h1>My Profile</h1>
+          <Link href="/profile/edit" className={css.editProfileButton}>
+  Edit profile
+</Link>
+        </div>
+        <div>
+          <p>Name: {user.username ?? user.name}</p>
+          <p>Email: {user.email}</p>
+        </div>
+      </section>
     );
   } catch {
-    return <div>Failed to load profile.</div>;
+    return <div>Please log in to view profile</div>;
   }
 }

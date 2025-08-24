@@ -1,17 +1,13 @@
 'use client';
 
-import React from 'react';
-
-interface ErrorPageProps {
+interface ErrorProps {
   error: Error;
-  reset: () => void;
+};
+
+const Error = ({ error}:ErrorProps) => {
+  return (
+    <p>Could not fetch the list of notes. {error.message}</p>
+  )
 }
 
-export default function Error({ error, reset }: ErrorPageProps) {
-  return (
-    <div>
-      <p>Could not fetch the list of notes. {error.message}</p>
-      <button onClick={() => reset()}>Try again</button>
-    </div>
-  );
-}
+export default Error;

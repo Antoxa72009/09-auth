@@ -1,23 +1,23 @@
-import { api } from './api';
-import { User } from '@/lib/store/authStore';
+import { nextServer } from './api';
+import type { User } from '@/lib/store/authStore';
 
 export async function loginUser(email: string, password: string): Promise<User> {
-  const { data } = await api.post('/auth/login', { email, password });
+  const { data } = await nextServer.post('/auth/login', { email, password });
   return data;
 }
 
 export async function registerUser(email: string, password: string): Promise<User> {
-  const { data } = await api.post('/auth/register', { email, password });
+  const { data } = await nextServer.post('/auth/register', { email, password });
   return data;
 }
 
 export async function logoutUser(): Promise<void> {
-  await api.post('/auth/logout');
+  await nextServer.post('/auth/logout');
 }
 
 export async function fetchSession(): Promise<User | null> {
   try {
-    const { data } = await api.get('/auth/session');
+    const { data } = await nextServer.get('/auth/session');
     return data || null;
   } catch {
     return null;
@@ -25,30 +25,30 @@ export async function fetchSession(): Promise<User | null> {
 }
 
 export async function fetchUserMe(): Promise<User> {
-  const { data } = await api.get('/users/me');
+  const { data } = await nextServer.get('/users/me');
   return data;
 }
 
 export async function updateUserMe(user: Partial<User>): Promise<User> {
-  const { data } = await api.patch('/users/me', user);
+  const { data } = await nextServer.patch('/users/me', user);
   return data;
 }
 
 export async function fetchNotes(params?: { search?: string; page?: number; tag?: string }) {
-  const { data } = await api.get('/notes', { params });
+  const { data } = await nextServer.get('/notes', { params });
   return data;
 }
 
 export async function fetchNoteById(id: string) {
-  const { data } = await api.get(`/notes/${id}`);
+  const { data } = await nextServer.get(`/notes/${id}`);
   return data;
 }
 
 export async function createNote(note: { title: string; content: string; tag: string }) {
-  const { data } = await api.post('/notes', note);
+  const { data } = await nextServer.post('/notes', note);
   return data;
 }
 
 export async function deleteNote(id: string) {
-  await api.delete(`/notes/${id}`);
+  await nextServer.delete(`/notes/${id}`);
 }

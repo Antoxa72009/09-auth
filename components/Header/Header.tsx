@@ -1,25 +1,29 @@
-import Link from 'next/link';
-import css from './Header.module.css';
-import AuthNavigation from '../AuthNavigation/AuthNavigation';
+import Link from "next/link"
+import css from "./Header.module.css"
+import TagsMenu from "../TagsMenu/TagsMenu";
+import AuthNavigation from "../AuthNavigation/AuthNavigation";
+import cssauth from "../AuthNavigation/AuthNavigation.module.css"
 
-export default function Header() {
+const Header = async () => {
+  
   return (
     <header className={css.header}>
-      <nav className={css.navigation}>
-        <div className={css.navigationWrapper}>
-          <Link href="/" className={css.navigationLogo}>
-            NoteHub
-          </Link>
-          <ul className={css.navigationList}>
-            <li className={css.navigationItem}>
-              <Link href="/notes/filter/all" prefetch={false} className={css.navigationLink}>
-                Notes
-              </Link>
-            </li>
-            <AuthNavigation />
-          </ul>
-        </div>
+      <Link href="/" aria-label="Home">
+        NoteHub
+      </Link>
+      <nav aria-label="Main Navigation">
+        <ul className={css.navigation}>
+          <li className={cssauth.navigationItem}>
+            <Link href="/">Home</Link>
+          </li>
+          <li className={cssauth.navigationItem}>
+            <TagsMenu/>
+          </li>
+          <AuthNavigation/>
+        </ul>
       </nav>
     </header>
-  );
+  )
 }
+
+export default Header;
