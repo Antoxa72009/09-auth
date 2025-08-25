@@ -15,3 +15,11 @@ export interface Note {
   updatedAt: string;
   ownerId: string;
 }
+
+export interface NewNote {
+  content: string;
+  tag: string;
+  title: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

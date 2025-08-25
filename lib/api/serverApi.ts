@@ -1,6 +1,7 @@
 import type { AxiosResponse } from "axios";
 import { nextServer } from "./api";
 import { cookies } from "next/headers";
+import { NotesHttpResponse } from "./clientApi";
 
 interface SessionData {
   accessToken?: string;
@@ -62,4 +63,22 @@ export async function createNote(
     headers: { Cookie: `token=${token}` },
   });
   return data;
+}
+
+export const fetchServerNotes = async (search: string, page: number, tag: string|undefined) => {
+  const cookieStore = await cookies()
+  const params = {
+    ...(search  && { search }),
+    page,
+    perPage: 12,
+    tag,
+  }
+  const headers = {
+    Cookie: cookieStore.toString()
+  }
+  const response = await nextServer.get<NotesHttpResponse>("/notes", {
+    params,
+    headers,
+  })
+  return response.data;
 }

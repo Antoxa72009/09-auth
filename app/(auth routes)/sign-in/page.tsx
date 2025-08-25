@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginUser } from '@/lib/api/clientApi';
+import { login } from '@/lib/api/clientApi';
 import css from './SignInPage.module.css';
 import { useAuthStore } from '@/lib/store/authStore';
 
@@ -16,8 +16,8 @@ export default function SignInPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    try {
-      const user = await loginUser(email, password);
+    try {      
+      const user = await login({ email, password });
       setUser(user);
       router.push('/profile');
     } catch {

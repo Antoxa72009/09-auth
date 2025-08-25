@@ -1,54 +1,103 @@
-import { nextServer } from './api';
-import type { User } from '@/lib/store/authStore';
+import { User } from "@/types/user";
+import { nextServer } from "./api";
+import { NewNote, Note } from "@/types/note";
 
-export async function loginUser(email: string, password: string): Promise<User> {
-  const { data } = await nextServer.post('/auth/login', { email, password });
-  return data;
+export interface SignUpRequest {
+  email: string;
+  password: string;
 }
 
-export async function registerUser(email: string, password: string): Promise<User> {
-  const { data } = await nextServer.post('/auth/register', { email, password });
-  return data;
+export interface SignInRequest {
+  email: string;
+  password: string;
 }
 
-export async function logoutUser(): Promise<void> {
-  await nextServer.post('/auth/logout');
+export interface CheckSessionRequest {
+  success: boolean;
 }
 
-export async function fetchSession(): Promise<User | null> {
-  try {
-    const { data } = await nextServer.get('/auth/session');
-    return data || null;
-  } catch {
-    return null;
-  }
+export interface NotesHttpResponse {
+  notes: Note[];
+  totalPages: number;
 }
 
-export async function fetchUserMe(): Promise<User> {
-  const { data } = await nextServer.get('/users/me');
-  return data;
+export interface UpdateUserRequest {
+  username: string;
 }
 
-export async function updateUserMe(user: Partial<User>): Promise<User> {
-  const { data } = await nextServer.patch('/users/me', user);
-  return data;
+export const register = async (data: SignUpRequest) => {
+  const response = await nextServer.post<User>("/auth/register", data);
+  return response.data;
+};
+
+export const login = async ({ email, password }: SignInRequest) => {
+  const response = await nextServer.post<User>("/auth/login", { email, password });
+  return response.data;
+};
+
+export const fetchSession = async () => {
+  try {
+    const response = await nextServer.get<User>("/auth/session");
+    return response.data;
+  } catch {
+    return null;
+  }
+};
+
+export const getMe = async () => {
+  const response = await nextServer.get<User>("/users/me");
+  return response.data;
+};
+
+export const logoutUser = async (): Promise<void> => {
+  const response = await nextServer.post("/auth/logout");
+  return response.data;
+};
+
+export const updateMe = async (body: UpdateUserRequest) => {
+  const response = await nextServer.patch<User>("/users/me", body);
+  return response.data;
+};
+
+export async function fetchNotes(search: string, page: number, tag?: string) {
+  try {
+    const response = await nextServer.get<NotesHttpResponse>("/notes", {
+      params: {
+        ...(search !== "" && { search }),
+        page,
+        perPage: 12,
+        ...(tag && { tag }),
+      },
+    });
+    return response.data;
+  } catch {
+    throw new Error("Fetch tasks failed");
+  }
 }
 
-export async function fetchNotes(params?: { search?: string; page?: number; tag?: string }) {
-  const { data } = await nextServer.get('/notes', { params });
-  return data;
+export async function createNote(newNote: NewNote): Promise<Note> {
+  try {
+    const response = await nextServer.post<Note>("/notes", newNote);
+    return response.data;
+  } catch {
+    throw new Error("Create task failed");
+  }
 }
 
-export async function fetchNoteById(id: string) {
-  const { data } = await nextServer.get(`/notes/${id}`);
-  return data;
+export async function deleteNote(noteId: string) {
+  try {
+    const response = await nextServer.delete<Note>(`/notes/${noteId}`);
+    return response.data;
+  } catch {
+    throw new Error("Delete task failed");
+  }
 }
 
-export async function createNote(note: { title: string; content: string; tag: string }) {
-  const { data } = await nextServer.post('/notes', note);
-  return data;
-}
-
-export async function deleteNote(id: string) {
-  await nextServer.delete(`/notes/${id}`);
+export async function fetchNoteById(noteId: string) {
+  try {
+    const response = await nextServer.get<Note>(`/notes/${noteId}`);
+    return response.data;
+  } catch {
+    throw new Error("Could not fetch note details.");
+  }
 }

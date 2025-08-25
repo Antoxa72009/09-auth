@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import css from './EditProfilePage.module.css';
 import Image from 'next/image';
-import { fetchUserMe, updateUserMe } from '@/lib/api/clientApi';
+import { getMe, updateMe } from '@/lib/api/clientApi';
 import { useRouter } from 'next/navigation';
 
 export default function EditProfilePage() {
@@ -16,11 +16,12 @@ export default function EditProfilePage() {
   useEffect(() => {
     (async () => {
       try {
-        const user = await fetchUserMe();
+        const user = await getMe();
         if (user) {
           setUsername(user.username ?? '');
           setEmail(user.email ?? '');
-          setAvatar(user.avatar ?? null);
+          // 🔹 Виправлено: використовуємо user.avatarUrl замість user.avatar
+          setAvatar(user.avatarUrl ?? null);
         }
       } catch (err) {
         console.error('Failed to fetch user:', err);
@@ -32,7 +33,7 @@ export default function EditProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await updateUserMe({ username });
+      await updateMe({ username });
       router.push('/profile');
     } finally {
       setSaving(false);

@@ -1,19 +1,35 @@
+"use client";
+
+import { ChangeEvent, useState } from "react";
 import css from "./SearchBox.module.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
 interface SearchBoxProps {
-  value: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (value: string) => void;
 }
 
-export default function SearchBox({ value, onChange }: SearchBoxProps) {
-  return (
-    <input
-      className={css.input}
-      type="text"
-      name="search"
-      value={value}
-      placeholder="Search notes"
-      onChange={onChange}
-    />
-  );
-}
+const SearchBox = ({ onChange }: SearchBoxProps) => {
+  const [value, setValue] = useState("");
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value;
+    setValue(newValue);
+    onChange(newValue);
+  };
+
+  return (
+    <div className={css.searchBox}>
+      <input
+        type="text"
+        placeholder="Search notes"
+        value={value}
+        onChange={handleChange}
+        className={css.input}
+      />
+      <FontAwesomeIcon icon={faSearch} className={css.icon} />
+    </div>
+  );
+};
+
+export default SearchBox;

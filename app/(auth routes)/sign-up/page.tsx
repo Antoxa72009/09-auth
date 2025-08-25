@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { registerUser } from '@/lib/api/clientApi';
+import { register } from '@/lib/api/clientApi';
 import css from './SignUpPage.module.css';
 import { useAuthStore } from '@/lib/store/authStore';
 
@@ -17,7 +17,8 @@ export default function SignUpPage() {
     e.preventDefault();
     setError('');
     try {
-      const user = await registerUser(email, password);
+      // 🔹 Виправлено: передаємо один об'єкт замість двох аргументів
+      const user = await register({ email, password });
       setUser(user);
       router.push('/profile');
     } catch {

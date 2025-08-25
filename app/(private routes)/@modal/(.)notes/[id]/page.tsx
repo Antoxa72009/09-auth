@@ -6,16 +6,17 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 
 interface NotePreviewPageProps {
-  params: Record<string, string>;
+  params: Promise<{ id: string }>;
 }
 
 export default async function NotePreviewPage({ params }: NotePreviewPageProps) {
+  const { id: noteId } = await params;
+
   const queryClient = new QueryClient();
 
   const cookieStore = await cookies();
   const token = cookieStore.get?.("token")?.value ?? null;
 
-  const noteId = params.id;
   if (!noteId) notFound();
 
   try {
