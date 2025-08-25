@@ -1,36 +1,36 @@
-'use client';
+"use client"
 
-import { useAuthStore } from '@/lib/store/authStore';
-import { useRouter } from 'next/navigation';
-import css from './AuthNavigation.module.css';
-import { logoutUser } from '@/lib/api/clientApi';
-import Link from 'next/link';
+import Link from "next/link"
+import css from "./AuthNavigation.module.css"
+import { useAuthStore } from "@/lib/store/authStore"
+import { useRouter } from "next/navigation"
+import { logout } from "@/lib/api/clientApi"
 
-export default function AuthNavigation() {
-  const router = useRouter();
-  const { user, isAuthenticated, clearIsAuthenticated } = useAuthStore();
-
+const AuthNavigation = () => {
+  const { isAuthenticated, user } = useAuthStore()
+  const clearIsAutenticated = useAuthStore(
+    (state)=>state.clearIsAuthenticated,
+  )
+  const router = useRouter()
+  
   const handleLogout = async () => {
-    try {
-      await logoutUser();
-      clearIsAuthenticated();
-      router.push('/sign-in');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
+    await logout()
+    clearIsAutenticated()
+    router.push("/sign-in")
+  }
 
   return (
     <>
       {isAuthenticated ? (
         <>
           <li className={css.navigationItem}>
-            <Link href="/profile" prefetch={false} className={css.navigationLink}>
-              Profile
-            </Link>
+          <Link href="/profile" prefetch={false} className={css.navigationLink}>
+            Profile
+          </Link>
           </li>
+          
           <li className={css.navigationItem}>
-            <p className={css.userEmail}>{user?.email}</p>
+            <p className={css.userEmail}>{user?.username.trim().length !== 0 ? user?.username : user?.email}</p>
             <button className={css.logoutButton} onClick={handleLogout}>
               Logout
             </button>
@@ -43,13 +43,17 @@ export default function AuthNavigation() {
               Login
             </Link>
           </li>
+    
           <li className={css.navigationItem}>
             <Link href="/sign-up" prefetch={false} className={css.navigationLink}>
               Sign up
             </Link>
           </li>
         </>
-      )}
+        )
+      }
     </>
-  );
+  )
 }
+
+export default AuthNavigation;

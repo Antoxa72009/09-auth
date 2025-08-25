@@ -1,64 +1,48 @@
-import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
-import NoteDetails from './NoteDetails.client';
-import { fetchNoteById } from '@/lib/api/serverApi';
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { fetchServerNotebyId } from "@/lib/api/serverApi";
+import NoteDetailsClient from "./NoteDetails.client";
+import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+import { Metadata } from "next";
 
-interface NotesPageProps {
-  params: { id: string };
-}
 
-export async function generateMetadata({
-  params,
-}: NotesPageProps): Promise<Metadata> {
-  const { id } = params;
-  if (!id) notFound();
+interface Props {
+  params: Promise<{ id: string }>;
+};
 
-  const cookieStore = cookies();
-  const cookieHeader = cookieStore.toString();
-
-  const note = await fetchNoteById(id, cookieHeader);
-  if (!note) notFound();
-
-  const url = `https://yourdomain.com/notes/${id}`;
-  const description = note.content?.slice(0, 150) || 'Note details in NoteHub.';
-
+export async function generateMetadata({ params }: Props):Promise<Metadata> {
+  const { id } = await params;
+  const note = await fetchServerNotebyId(id);
   return {
-    title: `${note.title} — NoteHub`,
-    description,
+    title: `Note: ${note.title}`,
+    description: note.content.slice(0, 20),
     openGraph: {
-      title: `${note.title} — NoteHub`,
-      description,
-      url,
+      title: `Note: ${note.title}`,
+      description: note.content.slice(0, 50),
+      url: `https://notehub.com/notes/${id}`,
       images: [
         {
-          url: 'https://yourdomain.com/og-image-note.png',
-          width: 1200,
-          height: 630,
-          alt: note.title,
+          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
+          width: 1374,
+          height: 916,
+          alt: "NoteHub logo"
         },
       ],
-    },
-  };
+    }
+  }
 }
 
-export default async function NoteDetailsRoute({ params }: NotesPageProps) {
-  const { id } = params;
-  if (!id) notFound();
-
+const NoteDetails = async ({ params }: Props) => {
+  const { id } = await params;
   const queryClient = new QueryClient();
-  const cookieStore = cookies();
-  const cookieHeader = cookieStore.toString();
 
   await queryClient.prefetchQuery({
-    queryKey: ['note', id],
-    queryFn: () => fetchNoteById(id, cookieHeader),
-  });
+    queryKey: ["note", id],
+    queryFn: ()=>fetchServerNotebyId(id),
+  })
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <NoteDetails id={id} />
-    </HydrationBoundary>
-  );
+      <NoteDetailsClient />
+    </HydrationBoundary>)
 }
+
+export default NoteDetails;

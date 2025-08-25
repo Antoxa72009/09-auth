@@ -1,42 +1,24 @@
-import { Dispatch, SetStateAction } from "react";
-import css from "./Pagination.module.css";
+import ReactPaginate from "react-paginate"
+import css from "./Pagination.module.css"
 
 interface PaginationProps {
-  totalPages: number;
-  page: number;
-  setPage: Dispatch<SetStateAction<number>>;
+  totalPages: number;
+  page: number;
+  setPage: (page: number) => void;
 }
 
-const Pagination = ({ totalPages, page, setPage }: PaginationProps) => {
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
-
-  return (
-    <div className={css.pagination}>
-      <button
-        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-        disabled={page === 1}
-        className={css.button}
-      >
-        &larr;
-      </button>
-      {pageNumbers.map((p) => (
-        <button
-          key={p}
-          onClick={() => setPage(p)}
-          className={`${css.button} ${page === p ? css.active : ""}`}
-        >
-          {p}
-        </button>
-      ))}
-      <button
-        onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-        disabled={page === totalPages}
-        className={css.button}
-      >
-        &rarr;
-      </button>
-    </div>
-  );
-};
-
-export default Pagination;
+export default function Pagination({totalPages, page, setPage}:PaginationProps) {
+  return (
+    <ReactPaginate
+      pageCount={totalPages}
+      pageRangeDisplayed={5}
+      marginPagesDisplayed={1}
+      onPageChange={({ selected }) => setPage(selected + 1)}
+      forcePage={page - 1}
+      containerClassName={css.pagination}
+      activeClassName={css.active}
+      nextLabel="→"
+      previousLabel="←"
+    />
+  )
+}

@@ -1,44 +1,45 @@
-'use client';
+"use client"
 
-import { useRouter } from 'next/navigation';
-import React, { useCallback, useRef, useEffect } from 'react';
-import css from './Modal.module.css';
+import { createPortal } from "react-dom";
+import css from "./Modal.module.css"
+import { useEffect } from "react";
 
-export default function Modal({ children }: { children: React.ReactNode }) {
-  const overlay = useRef(null);
-  const wrapper = useRef(null);
-  const router = useRouter();
 
-  const onDismiss = useCallback(() => {
-    router.back();
-  }, [router]);
+interface ModalProps{
+  onClose: () => void;
+  children: React.ReactNode;
+}
 
-  const onClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === overlay.current || e.target === wrapper.current) {
-        if (onDismiss) onDismiss();
-      }
-    },
-    [onDismiss, overlay, wrapper]
-  );
-
-  const onKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onDismiss();
-    },
-    [onDismiss]
-  );
-
+const Modal = ({onClose, children}:ModalProps)=> {
   useEffect(() => {
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onKeyDown]);
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    }
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeydown);
 
-  return (
-    <div ref={overlay} className={css.overlay} onClick={onClick}>
-      <div ref={wrapper} className={css.wrapper}>
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleKeydown);
+    }
+  }, [onClose]);
+  
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose()
+  }
+
+  return createPortal(
+    <div
+      className={css.backdrop}
+      role="dialog"
+      aria-modal="true"
+      onClick={handleBackdropClick}
+    >
+      <div className={css.modal}>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
+export default Modal;

@@ -1,44 +1,40 @@
-'use client';
+"use client"
 
-import { useEffect, useState, FormEvent } from 'react';
-import css from './EditProfilePage.module.css';
-import Image from 'next/image';
-import { getMe, updateMe } from '@/lib/api/clientApi';
-import { useRouter } from 'next/navigation';
+import Image from "next/image"
+import css from "./EditProfilePage.module.css"
+import { getMe, updateMe } from "@/lib/api/clientApi"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/lib/store/authStore"
 
-export default function EditProfilePage() {
-  const router = useRouter();
-  const [username, setUsername] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [avatar, setAvatar] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+
+const EditProfile = () => {
+  const [username, setUsername] = useState("")
+  const router = useRouter()
+  const user = useAuthStore((state) => state.user)
+  const setUser = useAuthStore((state) => state.setUser)
 
   useEffect(() => {
-    (async () => {
-      try {
-        const user = await getMe();
-        if (user) {
-          setUsername(user.username ?? '');
-          setEmail(user.email ?? '');
-          // 🔹 Виправлено: використовуємо user.avatarUrl замість user.avatar
-          setAvatar(user.avatarUrl ?? null);
-        }
-      } catch (err) {
-        console.error('Failed to fetch user:', err);
-      }
-    })();
-  }, []);
+    getMe().then((user) => {
+      setUsername(user.username ?? "")
+    })
+  }, [])
 
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await updateMe({ username });
-      router.push('/profile');
-    } finally {
-      setSaving(false);
-    }
-  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value)
+  }
+
+  const handleSaveUser = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const updatedUser = await updateMe({ username })
+    setUser(updatedUser)
+    router.push("/profile")
+  }
+
+  const handleBack = () => {
+    router.back()
+  }
+
 
   return (
     <main className={css.mainContent}>
@@ -46,41 +42,38 @@ export default function EditProfilePage() {
         <h1 className={css.formTitle}>Edit Profile</h1>
 
         <Image
-          src={avatar || '/avatar-placeholder.png'}
+          src={user?.avatar ?? "https://ac.goit.global/fullstack/react/default-avatar.jpg"}
           alt="User Avatar"
           width={120}
           height={120}
           className={css.avatar}
         />
 
-        <form className={css.profileInfo} onSubmit={onSubmit}>
+        <form className={css.profileInfo} onSubmit={handleSaveUser}>
           <div className={css.usernameWrapper}>
             <label htmlFor="username">Username:</label>
-            <input
-              id="username"
+            <input id="username"
               type="text"
               className={css.input}
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={handleChange}
             />
           </div>
 
-          <p>Email: {email}</p>
+          <p>Email: { user?.email}</p>
 
           <div className={css.actions}>
-            <button type="submit" className={css.saveButton} disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
+            <button type="submit" className={css.saveButton}>
+              Save
             </button>
-            <button
-              type="button"
-              className={css.cancelButton}
-              onClick={() => router.push('/profile')}
-            >
+            <button type="button" className={css.cancelButton} onClick={handleBack}>
               Cancel
             </button>
           </div>
         </form>
       </div>
     </main>
-  );
+  )
 }
+
+export default EditProfile

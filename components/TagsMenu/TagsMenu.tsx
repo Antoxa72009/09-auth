@@ -1,45 +1,30 @@
-'use client';
+"use client"
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import css from './TagsMenu.module.css';
-import { NoteTag } from '@/types/note';
-
-const tags: Array<NoteTag | 'All'> = ['All', 'Todo', 'Work', 'Personal', 'Shopping', 'Meeting'];
+import css from "./TagsMenu.module.css"
+import { useState } from "react";
+import Link from "next/link";
 
 const TagsMenu = () => {
-  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-
-  const toggleMenu = () => setIsOpen(!isOpen);
-  const closeMenu = () => setIsOpen(false);
-
+  const toggle = () => setIsOpen(!isOpen);
+  
+  const tags = ['All', 'Work', 'Personal', 'Meeting', 'Shopping', 'Todo'];
+  
   return (
     <div className={css.menuContainer}>
-      <button className={css.menuButton} onClick={toggleMenu} aria-expanded={isOpen}>
+      <button className={css.menuButton} onClick={toggle}>
         Notes ▾
       </button>
       {isOpen && (
-        <ul className={css.menuList} onMouseLeave={closeMenu}>
-          {tags.map((tag) => {
-            const href = `/notes/filter/${encodeURIComponent(tag)}`;
-            const isActive = pathname?.toLowerCase().startsWith(`/notes/filter/${String(tag).toLowerCase()}`);
-            return (
-              <li key={tag} className={css.menuItem}>
-                <Link
-                  href={href}
-                  className={`${css.menuLink} ${isActive ? css.active : ''}`}
-                  aria-current={isActive ? 'page' : undefined}
-                  onClick={closeMenu}
-                >
-                  {tag}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+        <ul className={css.menuList}>
+          {tags.map((tag) => (
+            <li className={css.menuItem} key={tag} onClick={ () => setIsOpen(false)}>
+              <Link href={`/notes/filter/${tag}`} className={css.menuLink}>
+                {tag}
+              </Link>
+            </li>
+          ))}
+        </ul>)}
     </div>
   );
 };

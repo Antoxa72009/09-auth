@@ -1,69 +1,102 @@
-'use client';
+"use client"
+import css from "./NoteForm.module.css"
+import { useId } from "react";
+import type { NewNote } from "../../types/note";
+import { useNoteDraftStore } from "@/lib/store/noteStore";
+import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNote } from "@/lib/api/clientApi";
 
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
-import { useRouter } from 'next/navigation';
-import { createNote } from '@/lib/api/clientApi';
-import styles from './NoteForm.module.css';
-import type { NoteTag } from '@/types/note';
-
-const validationSchema = Yup.object({
-  title: Yup.string().required('Title is required').max(100),
-  content: Yup.string().required('Content is required').max(1000),
-});
 
 export default function NoteForm() {
-  const router = useRouter();
-
-  const handleSubmit = async (values: { title: string; content: string }) => {
-    try {
-      await createNote({
-        title: values.title,
-        content: values.content,
-        tag: 'Work' as NoteTag, // за замовчуванням
-      });
-
-      router.push('/notes/filter/all');
-    } catch (err) {
-      console.error(err);
-      alert('Failed to create note');
+  const fieldId = useId();
+  const router = useRouter()
+  const { draft, setDraft, clearDraft} = useNoteDraftStore();
+  const queryClient = useQueryClient();
+  const {mutate, isPending} = useMutation({
+    mutationFn: createNote,
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      clearDraft()
+      router.push("/notes/filter/All")
     }
-  };
+  })
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setDraft({
+      ...draft,
+      [e.target.name]: e.target.value
+    })
+  }
+  const handleClose = () => {
+    router.back()
+  }
+  
+
+  const handleSubmit = (formData: FormData) => {  
+    const data = Object.fromEntries(formData) as unknown as NewNote;
+    if (data.title.trim().length === 0) {
+      return alert("Please enter note's title");
+    } else if (data.content.trim().length === 0) {
+      return alert("Please enter note's content")
+    }
+    mutate(data)
+  }
 
   return (
-    <Formik
-      initialValues={{ title: '', content: '' }}
-      validationSchema={validationSchema}
-      onSubmit={(values, { resetForm }) => {
-        handleSubmit(values);
-        resetForm();
-      }}
-    >
-      {({ isSubmitting }) => (
-        <Form className={styles.form}>
-          <div className={styles.field}>
-            <label htmlFor="title">Title</label>
-            <Field id="title" name="title" placeholder="Enter title" />
-            <ErrorMessage name="title" component="div" className={styles.error} />
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="content">Content</label>
-            <Field
-              as="textarea"
-              id="content"
-              name="content"
-              placeholder="Enter content"
-              rows={5}
-            />
-            <ErrorMessage name="content" component="div" className={styles.error} />
-          </div>
-
-          <button type="submit" className={styles.button} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Create'}
+      <form className={css.form} action={handleSubmit}>
+        <div className={css.formGroup}>
+          <label htmlFor={`${fieldId}-title`}>Title</label>
+          <input
+            id={`${fieldId}-title`}
+            type="text"
+            name="title"
+            className={css.input}
+            defaultValue={draft.title}
+            onChange={handleChange}
+          />
+        </div>
+  
+        <div className={css.formGroup}>
+          <label htmlFor={`${fieldId}-content`}>Content</label>
+          <textarea
+            id={`${fieldId}-content`}
+            name="content"
+            rows={8}
+            className={css.textarea}
+            defaultValue={draft.content}
+            onChange={handleChange}
+          />
+        </div>
+  
+        <div className={css.formGroup}>
+          <label htmlFor={`${fieldId}-tag`}>Tag</label>
+          <select
+            id={`${fieldId}-tag`}
+            name="tag"
+            className={css.select}
+            defaultValue={draft.tag}
+            onChange={handleChange}
+          >
+            <option value="Todo">Todo</option>
+            <option value="Work">Work</option>
+            <option value="Personal">Personal</option>
+            <option value="Meeting">Meeting</option>
+            <option value="Shopping">Shopping</option>            
+          </select>
+        </div>
+  
+        <div className={css.actions}>
+          <button type="button" className={css.cancelButton} onClick={handleClose}>
+            Cancel
           </button>
-        </Form>
-      )}
-    </Formik>
-  );
+          <button
+            type="submit"
+            className={css.submitButton}
+            disabled={isPending}
+          >
+            {isPending ? "Creating..." : "Create note"}
+          </button>
+        </div>
+      </form>
+  )
 }

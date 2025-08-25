@@ -1,23 +1,20 @@
 import Link from "next/link";
-import css from "./SidebarNotes.module.css";
+import css from "./SidebarNotes.module.css"
 
-const tags = ["All", "Todo", "Work", "Personal", "Meeting", "Shopping"];
+const SidebarNotes = async () => {
+  const tags = ['All', 'Work', 'Personal', 'Meeting', 'Shopping', 'Todo'];
 
-export default function SidebarNotesDefault() {
   return (
-    <aside>
-      <ul className={css.menuList}>
-        {tags.map((tag) => (
-          <li key={tag} className={css.menuItem}>
-            <Link
-              href={`/notes/filter/${encodeURIComponent(tag)}`}
-              className={css.menuLink}
-            >
-              {tag}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </aside>
-  );
+    <ul className={css.menuList}>
+      {tags.map((tag) => (
+        <li className={css.menuItem} key={tag}>
+          <Link href={`/notes/filter/${tag}`} className={css.menuLink}>
+            {tag}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
 }
+
+export default SidebarNotes;
