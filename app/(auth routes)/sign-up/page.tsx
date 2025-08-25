@@ -3,7 +3,6 @@
 import css from "./SignUpPage.module.css"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { ApiError } from "@/app/api/api"
 import { register, SignUpRequest } from "@/lib/api/clientApi"
 import { useAuthStore } from "@/lib/store/authStore"
 
@@ -25,12 +24,8 @@ const SignUp = () => {
         setError("Invalid email or password")
       }
 
-    } catch (error) {
-      setError(
-        (error as ApiError).response?.data?.error ??
-          (error as ApiError).message ??
-          'Oops... some error'
-      )
+    } catch {
+      setError('Something went wrong');
     }
   }
   
